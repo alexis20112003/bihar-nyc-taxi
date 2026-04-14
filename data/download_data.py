@@ -1,26 +1,40 @@
 import pandas as pd
-from sklearn.datasets import load_diabetes
 from sklearn.model_selection import train_test_split
 import sqlite3
 import os
+import urllib.request
+import zipfile
 import common
 
 DB_PATH = common.CONFIG['paths']['db_path']
 RANDOM_STATE = int(common.CONFIG['ml']['random_state'])
 
+DATA_URL = "https://github.com/eishkina-estia/ML2023/raw/main/data/New_York_City_Taxi_Trip_Duration.zip"
+
 def download_data():
-    X, y = load_diabetes(return_X_y=True, as_frame=True, scaled=True)
-    X.columns = ['age', 'sex', 'bmi', 'bp', 'tc', 'ldl', 'hdl', 'tch', 'ltg', 'glu']
-    data = pd.concat([X,y], axis=1)
-    data_train, data_test = train_test_split(data, test_size=0.2, random_state=RANDOM_STATE)
+    # download zip file
+    zip_path = os.path.join(os.path.dirname(DB_PATH), "New_York_City_Taxi_Trip_Duration.zip")
     db_dir = os.path.dirname(DB_PATH)
     if not os.path.exists(db_dir):
         os.makedirs(db_dir)
+    print(f"Downloading data from {DATA_URL}")
+    urllib.request.urlretrieve(DATA_URL, zip_path)
+
+    # read csv from zip
+    data = pd.read_csv(zip_path, compression='zip')
+    os.remove(zip_path)
+
+    # clean data (notebook Task 1)
+    data = data.drop(columns=['id'])
+    data = data.drop(columns=['dropoff_datetime'])
+    data['pickup_datetime'] = pd.to_datetime(data['pickup_datetime'])
+
+    # split train/test: 70/30
+    data_train, data_test = train_test_split(data, test_size=0.3, random_state=RANDOM_STATE)
+
+    # save to SQLite
     print(f"Saving train and test data to a database: {DB_PATH}")
     with sqlite3.connect(DB_PATH) as con:
-        # cur = con.cursor()
-        # cur.execute("DROP TABLE IF EXISTS train")
-        # cur.execute("DROP TABLE IF EXISTS test")
         data_train.to_sql(name='train', con=con, if_exists="replace", index=False)
         data_test.to_sql(name='test', con=con, if_exists="replace", index=False)
 
