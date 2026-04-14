@@ -1,98 +1,120 @@
-# Diabetes
+# Bihar Taxi
 
-Example of separation of data loading and processing, model training and inference logic.
+Prediction of NYC taxi trip duration using Ridge/Lasso regression. Separation of data loading, feature engineering, model training, and inference logic.
 
-## Files for the basic Training Pipeline
+Based on the [Kaggle NYC Taxi Trip Duration](https://www.kaggle.com/competitions/nyc-taxi-trip-duration) competition dataset (~1.4M trips).
 
-- `data/download_data.py`: Script for loading data into a local SQLite database (`data\diabetes.db`)
-- `notebooks/EDA.ipynb`: Jupyter notebook for basic exploratory data analysis (EDA).
-- `model/load_data.py`: Script for loading train and test data (data access layer)
-- `model/train.py`: Script for training a model and saving it to the `model-registry` folder
-- `model/test_model.py`: Script for testing the access to the pretrained model.
-- `common.py`: Script for loading and preparing config constants from `config.yml` file.
-- `requirements.txt`: List of required Python packages.
+## Dataset
 
-## Run the basic Training Pipeline
+| Field | Description |
+|-------|-------------|
+| `vendor_id` | Provider associated with the trip record |
+| `pickup_datetime` | Date and time when the meter was engaged |
+| `passenger_count` | Number of passengers in the vehicle |
+| `pickup_longitude` / `pickup_latitude` | Pickup coordinates |
+| `dropoff_longitude` / `dropoff_latitude` | Dropoff coordinates |
+| `store_and_fwd_flag` | Whether the trip record was held in vehicle memory (Y/N) |
+| `trip_duration` | Duration of the trip in seconds (**target variable**) |
+
+## Project Structure
+
+```
+.
+├── config.yml              # Paths and ML configuration
+├── common.py               # Config loader utility
+├── requirements.txt        # Python dependencies
+├── data/
+│   └── download_data.py    # Download and store data in SQLite (data/taxi.db)
+├── notebooks/
+│   └── LAB_5_Regression_Linear_Models_SOLUTION.ipynb  # EDA and model exploration
+├── model/
+│   ├── load_data.py        # Data access layer (train/test from SQLite)
+│   ├── train.py            # Train basic model and save to model-registry/
+│   ├── train_custom_model.py  # Train custom wrapper model
+│   └── test_model.py       # Test inference with pretrained model
+└── api/
+    └── main.py             # FastAPI prediction endpoints
+```
+
+## Setup
+
+### 1. Create and activate a virtual environment
+```shell
+$ python -m venv venv
+$ source venv/bin/activate
+```
+
+### 2. Install dependencies
+```shell
+$ pip install -r requirements.txt
+```
+
+## Run the Training Pipeline
 
 ### 1. Load data into the database
-Run the following command to download and store the dataset in an SQLite database:
 ```shell
 $ python -m data.download_data
 ```
-This creates the `data/diabetes.db` file, a [lightweight disk-based database](https://docs.python.org/3/library/sqlite3.html) containing 2 tables: train and test.
+Creates `data/taxi.db`, a SQLite database containing 2 tables: `train` and `test`.
 
 ### 2. Train and save the model
-To train the model and save it, run:
 ```shell
 $ python -m model.train
 ```
-This creates the `models/diabetes.model` file, which contains a serialized regression model.
+Creates `model-registry/taxi.model`, a serialized Ridge regression pipeline.
 
 ### 3. Test inference
-To test the trained model using the test dataset, run:
 ```shell
-python -m model.test_model
+$ python -m model.test_model
 ```
-This script loads the previously saved model and evaluates its performance.
+Loads the saved model and evaluates on random test samples.
 
-## Run the Training Pipeline using Custom Wrapper Class
+## Custom Wrapper Model
 
-The `model.DiabetesModel` class is a wrapper around a basic machine learning model, providing preprocessing and postprocessing capabilities.
+The `model.TaxiModel` class wraps a sklearn pipeline with custom preprocessing (feature engineering from `pickup_datetime`, haversine distance, traffic/speed flags) and postprocessing (inverse log transform).
 
-It includes standard `fit(X, y)` and `predict(X)` methods and allows to include specific feature engineering and output transformations relevant to your use case by customizing `_preprocess` and `_postprocess` methods.
-
-Train and save the model based on `model.DiabetesModel` class:
 ```shell
 $ python -m model.train_custom_model
 ```
-This creates the `models/diabetes_custom.model` file, which contains a serialized regression model.
+Creates `model-registry/taxi_custom.model`.
 
-## Diabetes Prediction API
+## Taxi Trip Duration Prediction API
 
 ### Overview
 
-This FastAPI-based API provides endpoints for predicting diabetes progression based on patient health metrics using a trained machine learning model. Model and database paths are defined in `config.yml`.
+FastAPI-based API for predicting taxi trip duration. Paths configured in `config.yml`.
 
 ### Endpoints
 
 #### POST /predict
 
-Predicts diabetes progression using the primary model `models/diabetes.model`.
+Predicts trip duration using the primary model `model-registry/taxi.model`.
 
 Request Body example (JSON):
-```
+```json
 {
-    "age": 0.09619652164973376,
-    "sex": -0.044641636506989144,
-    "bmi": 0.05199589785375607,
-    "bp": 0.0792647112814439,
-    "tc": 0.05484510736603471,
-    "ldl": 0.036577086450315016,
-    "hdl": -0.07653558588880739,
-    "tch": 0.14132210941786577,
-    "ltg": 0.0986480615153178,
-    "glu": 0.06105390622205087
+    "vendor_id": 1,
+    "pickup_datetime": "2016-03-14 17:24:55",
+    "passenger_count": 1,
+    "pickup_longitude": -73.9821,
+    "pickup_latitude": 40.7678,
+    "dropoff_longitude": -73.9645,
+    "dropoff_latitude": 40.7654,
+    "store_and_fwd_flag": "N"
 }
 ```
 
 Response:
-```
+```json
 {
-  "result": 291.4170292522082
+  "result": 643
 }
 ```
 
 #### POST /predict_custom
 
-Predicts diabetes progression using the custom model `models/diabetes_custom.model`.
-
-Response for the same request example as for `POST /predict` above (rounded to integer):
-```
-{
-  "result": 291
-}
-```
+Predicts trip duration using the custom model `model-registry/taxi_custom.model`.
 
 #### GET /patients/randomtest
 
-Retrieves a random test patient from the database.
+Retrieves a random test trip from the database.

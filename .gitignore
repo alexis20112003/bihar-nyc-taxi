@@ -8,7 +8,7 @@ __pycache__/
 
 # Distribution / packaging
 .Python
-data/diabetes.db
+data/taxi.db
 model-registry/
 .idea/
 build/

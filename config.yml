@@ -1,6 +1,6 @@
 paths:
-  db_path: ./data/diabetes.db
-  model_path: ./model-registry/diabetes.model
-  model_custom_path: ./model-registry/diabetes_custom.model
+  db_path: ./data/taxi.db
+  model_path: ./model-registry/taxi.model
+  model_custom_path: ./model-registry/taxi_custom.model
 ml:
   random_state: 42
