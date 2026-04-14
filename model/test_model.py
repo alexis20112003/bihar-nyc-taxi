@@ -1,5 +1,6 @@
+import numpy as np
 import pandas as pd
-from model.train import preprocess_data
+from model.train import preprocess_data, transform_target
 import pickle
 
 from model.load_data import load_random_test_data
@@ -21,10 +22,12 @@ def test_model(model):
     X, y = load_random_test_data()
     # need to perform the same preprocessing as for training
     X_preprocessed = preprocess_data(X)
-    y_pred = model.predict(X_preprocessed)
-    df = X
-    df['y_true'] = y
-    df['y_pred'] = y_pred
+    # model predicts log(trip_duration), inverse transform to get seconds
+    y_pred_log = model.predict(X_preprocessed)
+    y_pred = np.expm1(y_pred_log)
+    df = pd.DataFrame()
+    df['y_true'] = y.values
+    df['y_pred'] = np.round(y_pred).astype(int)
     print(df)
 
 
