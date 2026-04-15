@@ -1,13 +1,13 @@
-from pydantic import ValidationError
+
 
 def check_longitude(v: float) -> float:
     if not -180 <= v <= 180:
-        raise ValidationError("Longitude hors limites")
+        raise ValueError("Longitude hors limites")
     return v
 
 def check_latitude(v: float) -> float:
     if not -90 <= v <= 90:
-        raise ValidationError("Latitude hors NYC")
+        raise ValueError("Latitude hors NYC")
     return v
 
 def check_haversine_distance(trip) -> None:
@@ -17,4 +17,4 @@ def check_haversine_distance(trip) -> None:
         trip.dropoff_latitude, trip.dropoff_longitude
     )
     if distance < 0.05:
-        raise ValidationError("Distance pickup-dropoff trop courte (< 50m)")
+        raise ValueError("Distance pickup-dropoff trop courte (< 50m)")
