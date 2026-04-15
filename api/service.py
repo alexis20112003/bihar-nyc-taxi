@@ -5,15 +5,15 @@ import config
 DB_PATH = config.CONFIG['paths']['db_path']
 
 
-def save_prediction(trip: dict, result: int, endpoint: str):
+def save_prediction(trip: dict, result: int, endpoint: str, model_version: str):
     with sqlite3.connect(DB_PATH) as con:
         con.execute(
             """INSERT INTO predictions
-               (timestamp, endpoint, vendor_id, pickup_datetime, passenger_count,
+               (timestamp, endpoint, model_version, vendor_id, pickup_datetime, passenger_count,
                 pickup_longitude, pickup_latitude, dropoff_longitude, dropoff_latitude,
                 store_and_fwd_flag, result)
-               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
-            (datetime.now().isoformat(), endpoint,
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+            (datetime.now().isoformat(), endpoint, model_version,
              trip['vendor_id'], trip['pickup_datetime'], trip['passenger_count'],
              trip['pickup_longitude'], trip['pickup_latitude'],
              trip['dropoff_longitude'], trip['dropoff_latitude'],

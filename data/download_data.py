@@ -38,12 +38,25 @@ def download_data():
         data_train.to_sql(name='train', con=con, if_exists="replace", index=False)
         data_test.to_sql(name='test', con=con, if_exists="replace", index=False)
 
+        # create model_registry table
+        con.execute("""
+            CREATE TABLE IF NOT EXISTS model_registry (
+                version TEXT NOT NULL,
+                path TEXT NOT NULL,
+                model_type TEXT NOT NULL,
+                created_at TEXT NOT NULL,
+                PRIMARY KEY (version, model_type)
+            )
+        """)
+        print("Created model_registry table")
+
         # create predictions table for API logging
         con.execute("""
             CREATE TABLE IF NOT EXISTS predictions (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 timestamp TEXT NOT NULL,
                 endpoint TEXT NOT NULL,
+                model_version TEXT NOT NULL,
                 vendor_id INTEGER,
                 pickup_datetime TEXT,
                 passenger_count INTEGER,

@@ -22,6 +22,7 @@ import config
 DB_PATH = config.CONFIG['paths']['db_path']
 MODEL_PATH = config.CONFIG['paths']['model_path']
 MODEL_CUSTOM_PATH = config.CONFIG['paths']['model_custom_path']
+MODEL_VERSION = config.CONFIG['ml']['model_version']
 
 from service import save_prediction
 
@@ -69,7 +70,7 @@ def predict(trip: Trip):
     result_log = model.predict(input_preprocessed)[0]
     result = int(np.round(np.expm1(result_log)))
     # persist prediction
-    save_prediction(trip.model_dump(), result, "predict")
+    save_prediction(trip.model_dump(), result, "predict", MODEL_VERSION)
     # return prediction
     return {"result": result}
 
@@ -80,7 +81,7 @@ def predict_custom(trip: Trip):
     input_data = pd.DataFrame([trip.model_dump()])
     result = int(model_custom.predict(input_data)[0])
     # persist prediction
-    save_prediction(trip.model_dump(), result, "predict_custom")
+    save_prediction(trip.model_dump(), result, "predict_custom", MODEL_VERSION)
     # return prediction
     return {"result": result}
 

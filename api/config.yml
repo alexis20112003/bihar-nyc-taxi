@@ -2,3 +2,5 @@ paths:
   db_path: ./../data/taxi.db
   model_path: ./../model-registry/taxi.model
   model_custom_path: ./../model-registry/taxi_custom.model
+ml:
+  model_version: "1.0.0"

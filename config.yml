@@ -4,3 +4,4 @@ paths:
   model_custom_path: ./model-registry/taxi_custom.model
 ml:
   random_state: 42
+  model_version: "1.0.0"

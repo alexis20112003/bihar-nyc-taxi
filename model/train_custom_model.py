@@ -14,11 +14,13 @@ import dill
 from model.load_data import load_train_data, load_test_data
 from model.train import (
     haversine_array, is_high_traffic_trip, is_high_speed_trip, is_rare_point,
-    ABNORMAL_DATES, NUM_FEATURES, CAT_FEATURES, TRAIN_FEATURES
+    ABNORMAL_DATES, NUM_FEATURES, CAT_FEATURES, TRAIN_FEATURES,
+    register_model
 )
 
 import common
 MODEL_PATH = common.CONFIG['paths']['model_custom_path']
+MODEL_VERSION = common.CONFIG['ml']['model_version']
 
 
 # Custom wrapper class for Taxi trip duration prediction model
@@ -143,3 +145,5 @@ if __name__ == "__main__":
     score = evaluate_model(model)
     # serialize model in a file
     persist_model(model, MODEL_PATH)
+    # register model in database
+    register_model(MODEL_VERSION, MODEL_PATH, "custom")

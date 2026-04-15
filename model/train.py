@@ -8,11 +8,15 @@ from sklearn.metrics import root_mean_squared_error, r2_score
 
 import os
 import pickle
+import sqlite3
+from datetime import datetime
 
 from model.load_data import load_train_data, load_test_data
 
 import common
 MODEL_PATH = common.CONFIG['paths']['model_path']
+DB_PATH = common.CONFIG['paths']['db_path']
+MODEL_VERSION = common.CONFIG['ml']['model_version']
 
 # abnormal dates detected in the notebook EDA (fewer than 6300 trips)
 ABNORMAL_DATES = ['2016-01-23', '2016-01-24', '2016-01-25', '2016-05-30']
@@ -163,6 +167,16 @@ def persist_model(model, path):
     print(f"Done")
 
 
+def register_model(version, path, model_type):
+    print(f"Registering model v{version} ({model_type}) in model_registry")
+    with sqlite3.connect(DB_PATH) as con:
+        con.execute(
+            """INSERT OR REPLACE INTO model_registry (version, path, model_type, created_at)
+               VALUES (?, ?, ?, ?)""",
+            (version, path, model_type, datetime.now().isoformat())
+        )
+
+
 if __name__ == "__main__":
 
     # training workflow
@@ -172,3 +186,5 @@ if __name__ == "__main__":
     score = evaluate_model(model)
     # serialize model in a file
     persist_model(model, MODEL_PATH)
+    # register model in database
+    register_model(MODEL_VERSION, MODEL_PATH, "basic")
