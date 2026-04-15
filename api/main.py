@@ -1,5 +1,8 @@
 from fastapi import FastAPI
-from pydantic import BaseModel
+from pydantic import BaseModel, model_validator
+from pydantic.functional_validators import AfterValidator
+from typing import Annotated
+from validators import check_longitude, check_latitude, check_haversine_distance
 import uvicorn
 import sqlite3
 import numpy as np
@@ -44,11 +47,16 @@ class Trip(BaseModel):
     vendor_id: int
     pickup_datetime: str
     passenger_count: int
-    pickup_longitude: float
-    pickup_latitude: float
-    dropoff_longitude: float
-    dropoff_latitude: float
+    pickup_longitude: Annotated[float, AfterValidator(check_longitude)]
+    pickup_latitude: Annotated[float, AfterValidator(check_latitude)]
+    dropoff_longitude: Annotated[float, AfterValidator(check_longitude)]
+    dropoff_latitude: Annotated[float, AfterValidator(check_latitude)]
     store_and_fwd_flag: str
+
+    @model_validator(mode='after')
+    def validate_distance(self):
+        check_haversine_distance(self)
+        return self
 
 
 @app.post("/predict")
