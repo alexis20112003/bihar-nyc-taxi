@@ -23,6 +23,10 @@ MODEL_CUSTOM_PATH = config.CONFIG['paths']['model_custom_path']
 
 app = FastAPI()
 
+@app.get("/health")
+def health_check():
+    return {"status": "ok"}
+
 # load model (Ridge pipeline trained on log-transformed target)
 print(f"Loading the model from {MODEL_PATH}")
 with open(MODEL_PATH, "rb") as file:
