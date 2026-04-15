@@ -38,6 +38,25 @@ def download_data():
         data_train.to_sql(name='train', con=con, if_exists="replace", index=False)
         data_test.to_sql(name='test', con=con, if_exists="replace", index=False)
 
+        # create predictions table for API logging
+        con.execute("""
+            CREATE TABLE IF NOT EXISTS predictions (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                timestamp TEXT NOT NULL,
+                endpoint TEXT NOT NULL,
+                vendor_id INTEGER,
+                pickup_datetime TEXT,
+                passenger_count INTEGER,
+                pickup_longitude REAL,
+                pickup_latitude REAL,
+                dropoff_longitude REAL,
+                dropoff_latitude REAL,
+                store_and_fwd_flag TEXT,
+                result INTEGER
+            )
+        """)
+        print("Created predictions table")
+
 def test_download_data():
     with sqlite3.connect(DB_PATH) as con:
         cur = con.cursor()

@@ -1,0 +1,35 @@
+### Health check
+GET http://localhost:8000/health
+
+### Predict (basic model)
+POST http://localhost:8000/predict
+Content-Type: application/json
+
+{
+  "vendor_id": 1,
+  "pickup_datetime": "2016-03-14 17:24:55",
+  "passenger_count": 1,
+  "pickup_longitude": -73.9821,
+  "pickup_latitude": 40.7678,
+  "dropoff_longitude": -73.9645,
+  "dropoff_latitude": 40.7654,
+  "store_and_fwd_flag": "N"
+}
+
+### Predict custom (wrapper model)
+POST http://localhost:8000/predict_custom
+Content-Type: application/json
+
+{
+  "vendor_id": 1,
+  "pickup_datetime": "2016-03-14 17:24:55",
+  "passenger_count": 1,
+  "pickup_longitude": -73.9821,
+  "pickup_latitude": 40.7678,
+  "dropoff_longitude": -73.9645,
+  "dropoff_latitude": 40.7654,
+  "store_and_fwd_flag": "N"
+}
+
+### Random test trip
+GET http://localhost:8000/trips/randomtest

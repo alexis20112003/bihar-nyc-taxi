@@ -20,6 +20,8 @@ DB_PATH = config.CONFIG['paths']['db_path']
 MODEL_PATH = config.CONFIG['paths']['model_path']
 MODEL_CUSTOM_PATH = config.CONFIG['paths']['model_custom_path']
 
+from service import save_prediction
+
 
 app = FastAPI()
 
@@ -58,6 +60,8 @@ def predict(trip: Trip):
     # model predicts log(trip_duration), inverse transform to get seconds
     result_log = model.predict(input_preprocessed)[0]
     result = int(np.round(np.expm1(result_log)))
+    # persist prediction
+    save_prediction(trip.model_dump(), result, "predict")
     # return prediction
     return {"result": result}
 
@@ -67,7 +71,8 @@ def predict_custom(trip: Trip):
     # get prediction (TaxiModel handles preprocessing and postprocessing)
     input_data = pd.DataFrame([trip.model_dump()])
     result = int(model_custom.predict(input_data)[0])
-
+    # persist prediction
+    save_prediction(trip.model_dump(), result, "predict_custom")
     # return prediction
     return {"result": result}
 
