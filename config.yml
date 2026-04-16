@@ -5,3 +5,8 @@ paths:
 ml:
   random_state: 42
   model_version: "1.0.0"
+mlflow:
+  mlruns: ./model/mlruns
+  experiment_name: taxi_trip_duration
+  model_name: taxi_trip_duration
+  artifact_path: sklearn-model
