@@ -11,3 +11,4 @@ dill
 pydantic
 streamlit
 requests
+mlflow
