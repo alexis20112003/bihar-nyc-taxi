@@ -16,3 +16,5 @@ with open(CONFIG_PATH, "r") as f:
 
     for key, value in CONFIG['paths'].items():
         CONFIG['paths'][key] = get_full_path(value)
+
+    CONFIG['mlflow']['mlruns'] = get_full_path(CONFIG['mlflow']['mlruns'])
