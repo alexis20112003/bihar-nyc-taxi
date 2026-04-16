@@ -4,3 +4,6 @@ paths:
   model_custom_path: ./../model-registry/taxi_custom.model
 ml:
   model_version: "1.0.0"
+mlflow:
+  mlruns: ./../model/mlruns
+  model_name: taxi_trip_duration
