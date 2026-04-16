@@ -9,6 +9,7 @@ import numpy as np
 import pandas as pd
 import pickle
 import dill
+import mlflow
 import os
 import sys
 
@@ -23,6 +24,8 @@ DB_PATH = config.CONFIG['paths']['db_path']
 MODEL_PATH = config.CONFIG['paths']['model_path']
 MODEL_CUSTOM_PATH = config.CONFIG['paths']['model_custom_path']
 MODEL_VERSION = config.CONFIG['ml']['model_version']
+MLRUNS_PATH = config.CONFIG['mlflow']['mlruns']
+MLFLOW_MODEL_NAME = config.CONFIG['mlflow']['model_name']
 
 from service import save_prediction
 
@@ -33,10 +36,24 @@ app = FastAPI()
 def health_check():
     return {"status": "ok"}
 
-# load model (Ridge pipeline trained on log-transformed target)
-print(f"Loading the model from {MODEL_PATH}")
-with open(MODEL_PATH, "rb") as file:
-    model = pickle.load(file)
+# load model from MLflow registry
+mlflow.set_tracking_uri("file:" + MLRUNS_PATH)
+mlflow_client = mlflow.MlflowClient()
+try:
+    versions = mlflow_client.search_model_versions(f"name='{MLFLOW_MODEL_NAME}'")
+    if versions:
+        latest_version = max(versions, key=lambda v: int(v.version)).version
+        model_uri = f"models:/{MLFLOW_MODEL_NAME}/{latest_version}"
+        print(f"Loading model from MLflow registry: {model_uri}")
+        model = mlflow.pyfunc.load_model(model_uri)
+    else:
+        print(f"No model found in MLflow registry, falling back to pickle: {MODEL_PATH}")
+        with open(MODEL_PATH, "rb") as file:
+            model = pickle.load(file)
+except Exception as e:
+    print(f"MLflow registry not available ({e}), falling back to pickle: {MODEL_PATH}")
+    with open(MODEL_PATH, "rb") as file:
+        model = pickle.load(file)
 
 # load model created with a custom wrapper class, including custom preprocessing and postprocessing logic
 print(f"Loading the model from {MODEL_CUSTOM_PATH}")
@@ -67,7 +84,8 @@ def predict(trip: Trip):
     input_data = pd.DataFrame([trip.model_dump()])
     input_preprocessed = preprocess_data(input_data)
     # model predicts log(trip_duration), inverse transform to get seconds
-    result_log = model.predict(input_preprocessed)[0]
+    prediction = model.predict(input_preprocessed)
+    result_log = prediction[0] if hasattr(prediction, '__len__') else prediction
     result = int(np.round(np.expm1(result_log)))
     # persist prediction
     save_prediction(trip.model_dump(), result, "predict", MODEL_VERSION)
