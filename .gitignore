@@ -10,6 +10,7 @@ __pycache__/
 .Python
 data/taxi.db
 model-registry/
+model/mlruns/
 .idea/
 build/
 develop-eggs/
